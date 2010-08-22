@@ -1,4 +1,4 @@
-PHPSlideShow written by Greg Lawler
+PHPSlideShow by Greg Lawler
 download the latest version from http://www.zinkwazi.com/scripts
 
 PHPSlideshow is relesed under the GPL
@@ -9,8 +9,8 @@ IMPORTANT NOTE.... ;)
 if you want to send me a token of appreciation, i like coffee so
 anything from http://www.starbucks.com/card will be gladly accepted ;)
 my address is:
-attention: greg lawler
-801 alston road, santa barbara, ca 93108 usa
+attention: Greg Lawler
+27 East Cota St., Santa Barbara, CA 93101 
 
 DEFAULT INSTALL:
 Download PHPSlideshow.zip from http://www.zinkwazi.com/scripts and
@@ -27,8 +27,9 @@ If you wish to modify the default install, continue reading...
 Q: How do I get thumbnails created automatically?
 A: 1) You need to input your web site FTP username and password in the phpslidesho.php file.
    2) You ALSO need to tell PHPSlideshow where your web site is located once you log into FTP.
-      This is the directory that your web site is uploaded to and is usually wwwroot or httpdocs.
-   3) Finally, hange $create_thumbnails to be = "true";
+      This is the directory that your web site is uploaded to and is usually one of the following:
+	public_html, wwwroot or httpdocs.
+   3) Finally, change $create_thumbnails to be = "true";
    NOTE: Thumbnails are created the first time you view the slideshow.
 
 Q: How do I make PHPSlideshow start in AUTO slideshow mode like in the demo?
