@@ -73,6 +73,7 @@ $ftp_password = "your_password_here";
 // ftp web root directory (httpdocs, wwwroot, webroot etc.)
 // this is the directory that your website is located in on your FTP login.
 // (no slashes needed)
+//$ftp_web_root = "public_html";
 $ftp_web_root = "httpdocs";
 
 // thumbnail size
@@ -140,8 +141,8 @@ $currentPic = isset($_GET['currentPic']) ? strip_tags($_GET['currentPic']) : '';
 $auto = isset($_GET['auto']) ? strip_tags($_GET['auto']) : '';
 
 // check for platform dependent path info... (for windows and mac OSX)
-$path = empty($HTTP_SERVER_VARS['PATH_INFO'])?
-$HTTP_SERVER_VARS['PHP_SELF']:$HTTP_SERVER_VARS['PATH_INFO'];
+$path = empty($_SERVER['PATH_INFO'])?
+$_SERVER['PHP_SELF']:$_SERVER['PATH_INFO'];
 
 // this only works on php > 4.3, replacing with file()
 //if( file_exists( "template.html" ) ) $template = file_get_contents("template.html");
