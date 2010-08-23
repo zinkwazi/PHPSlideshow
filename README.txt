@@ -92,7 +92,6 @@ A: There are two ways to do this,
      You will need edit this in a text editor to add the semi colon and
      desription.
 
-
 Q: How do I use my current template HTML file with PHPSlideshow?
 A: Copy your template HTML into a file called template.html and add any of the available PHPSlideshow tags.
 
