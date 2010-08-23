@@ -21,6 +21,10 @@ script in your browser.
 NOTE: Be sure that you are loading phpslideshow.php in your browser and 
 NOT the template.html file (you'll see a strange broken page if you do this)
 
+Rename phpslideshow.php to index.php if you wish to load the slideshow by
+default in a directory e.g. http://example.com/dogs vs
+http://example.com/dogs/phpslideshow.php
+
 CUSTOM INSTALL:
 If you wish to modify the default install, continue reading...
 
