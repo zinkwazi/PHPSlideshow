@@ -35,7 +35,8 @@ if you want to send me a token of appreciation, i like coffee so
 anything from http://www.starbucks.com/card will be gladly accepted ;)
 my address is:
 attention: greg lawler
-801 alston road, santa barbara, ca 93108 usa
+27 E. Cota St. 
+Santa Barbara, CA 93117
 
 INSTALLATION: See README.txt
 

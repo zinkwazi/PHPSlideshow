@@ -1,6 +1,9 @@
 PHPSlideShow by Greg Lawler
 download the latest version from http://www.zinkwazi.com/scripts
 
+Developers can join the PHPSlideshow project on GitHub:
+http://github.com/zinkwazi/PHPSlideshow
+
 PHPSlideshow is relesed under the GPL
 See the license at http://www.gnu.org/licenses/gpl.txt
 Feel free to use/modify this little script
