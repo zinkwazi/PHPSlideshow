@@ -6,7 +6,7 @@ http://bandonrandon.wordpress.com
 Original PHPSlideShow written by Greg Lawler
 from http://www.zinkwazi.com/scripts
 
-v1.0 March 2011 - fixed PHP5 error, added contunious loop, added clean urls, added custom albumn titles, and added browse page/template 
+v1.0 March 2011 - fixed PHP5 error, added contunious loop, added clean urls, added custom albumn titles, added option to auto startslideshow and added browse page/template 
 v0.9.9.3 Jan 2008 - security fix to address xss vulnerability discovered by Jose Luis G�ngora Fern�ndez
 v0.9.9.1 Nov 2006 - stop infinite auto slideshow
 v0.9.9 June 2006 - added auto thumbnail creation 
@@ -124,6 +124,9 @@ $lang_start_slideshow = "start slideshow";
 $lang_img_hover = "click for next image...";
 $lang_img_alt = "slideshow image";
 
+//automatically start slideshow on page load
+$auto_start_slideshow = "false";
+
 // automated slideshow options
 // remember that you need <META_REFRESH> in the <head> section of your html
 // AND the <AUTO_SLIDESHOW_LINK> tag in your page.
@@ -169,8 +172,6 @@ $_SERVERS['PHP_SELF']:$_SERVER['PATH_INFO'];
 if( $browse == "1" ) {
   if( file_exists( "thumbs.html" ) ) {
     $template = implode("", file('thumbs.html'));
-    // you can change here some of the configuration options in the beginning (e.g., the number of thumbnails)
-    //$thumb_row = 5;
   }
   else {
       echo "<b>ERROR:</b> Can't find the thumbs.html file!";
@@ -406,13 +407,13 @@ function my_filmstrip($thumbnail_dir, &$template, $a_images, $currentPic, $thumb
 // }}}
 // {{{ meta refresh stuff for auto slideshow...
 // thanks to tim barmann for the bandwidth saving hack to stop auto slideshow at the last image.
-if (($auto == "1") && (($continuous_loop== "true") ||($currentPic < $number_pics-1))) {
+if ((($auto == "1") || ($auto_start_slideshow =="true")) && (($continuous_loop== "true") ||($currentPic < $number_pics-1))) {
         $auto_url = ($clean_urls == "true") ? "/true" : "&auto=1";
-		$meta_refresh = "<meta http-equiv='refresh' content='".$delay;
+	$meta_refresh = "<meta http-equiv='refresh' content='".$delay;
         $meta_refresh .=  ($clean_urls == "true") ? ";url=".$main_slideshow_path.$link_to_image_path."/".$next.$auto_url."'>" : ";url=".$path."?directory=".$path_to_images.$auto_url."&currentPic=".$next."'>";
 	        
 		
-		$template = str_replace("<META_REFRESH>",$meta_refresh,$template);
+        $template = str_replace("<META_REFRESH>",$meta_refresh,$template);
         $auto_slideshow = ($clean_urls == "true") ? "<a href='$main_slideshow_path$link_to_image_path/$currentPic'>$lang_stop_slideshow</a>\n" : "<a href='$path?directory=$path_to_images&currentPic=$currentPic'>$lang_stop_slideshow</a>\n";
         $template = str_replace("<AUTO_SLIDESHOW_LINK>",$auto_slideshow,$template);
 }
