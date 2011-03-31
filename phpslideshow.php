@@ -1,9 +1,13 @@
 <?php
 /* 
-PHPSlideShow v0.9 written by Greg Lawler
+PHPSlideShow v1.0 modifyed by Brooke Dukes
+http://bandonrandon.wordpress.com
+ 
+Original PHPSlideShow written by Greg Lawler
 from http://www.zinkwazi.com/scripts
 
-v0.9.9.3 Jan 2008 - security fix to address xss vulnerability discovered by Jose Luis Góngora Fernández
+v1.0 March 2011 - fixed PHP5 error, added contunious loop, added clean urls, added custom albumn titles, and added browse page/template 
+v0.9.9.3 Jan 2008 - security fix to address xss vulnerability discovered by Jose Luis G�ngora Fern�ndez
 v0.9.9.1 Nov 2006 - stop infinite auto slideshow
 v0.9.9 June 2006 - added auto thumbnail creation 
 v0.9.8 June 2006 - fixed the pics.txt special characters bug :)
@@ -35,7 +39,7 @@ if you want to send me a token of appreciation, i like coffee so
 anything from http://www.starbucks.com/card will be gladly accepted ;)
 my address is:
 attention: greg lawler
-27 E. Cota St. 
+27 E. Cota St.
 Santa Barbara, CA 93117
 
 INSTALLATION: See README.txt
@@ -60,6 +64,7 @@ $thumb_row = 19;
 // thumbnail directory name (no slashes needed)
 $thumbnail_dir = "thumbnails";
 
+
 // do you want to automatically generate thumbnails?
 // if this is set to true, you will need to provide your web site
 // ftp login info and web root directory below.
@@ -71,10 +76,10 @@ $create_thumbnails = "false";
 $ftp_username = "your_username_here";
 $ftp_password = "your_password_here";
 
+
 // ftp web root directory (httpdocs, wwwroot, webroot etc.)
 // this is the directory that your website is located in on your FTP login.
 // (no slashes needed)
-//$ftp_web_root = "public_html";
 $ftp_web_root = "httpdocs";
 
 // thumbnail size
@@ -87,6 +92,9 @@ $thumbnail_style = "crop";
 
 // output quality: 60 = poor quality tiny file, 100 = best quality larger file... 
 $thumbnail_quality = 80;
+
+//set this to true to have the images contiue to loop. instead of stopping on last image DEFAULT:false
+$continuous_loop = "false";
 
 // this should work as localhost but if not, insert your ftp server's name
 $ftp_hostname = "localhost";
@@ -126,6 +134,17 @@ $show_navigation_buttons = "false";
 $back_button = "/back.gif"; 
 $next_button = "/next.gif";
 
+//clean url options
+//should we use clean urls?
+$clean_urls = "false";
+//this is the dummy name for your home directory of image for example slideshow/main/
+//is the same as directory=./
+$clean_home_directory = "main"; 
+//set this to the main folder and path of your slideshow. This is needed so we can find the images and link to the correct meta in the slideshow
+// INCLUDE TRAILING SLASHES
+$main_slideshow_directory = "/slideshow/";
+$main_slideshow_path = "http://example.net";
+
 // ------------- END CONFIG SECTION --
 
 ################################################################################
@@ -140,11 +159,26 @@ $thumbnail_actual_height = "";
 $path_to_images = isset($_GET['directory']) ? strip_tags($_GET['directory']) : '';
 $currentPic = isset($_GET['currentPic']) ? strip_tags($_GET['currentPic']) : '';
 $auto = isset($_GET['auto']) ? strip_tags($_GET['auto']) : '';
+$browse = isset($_GET['browse']) ? strip_tags($_GET['browse']) : '';
 
 // check for platform dependent path info... (for windows and mac OSX)
 $path = empty($_SERVER['PATH_INFO'])?
-$_SERVER['PHP_SELF']:$_SERVER['PATH_INFO'];
+$_SERVERS['PHP_SELF']:$_SERVER['PATH_INFO'];
 
+//get browse template
+if( $browse == "1" ) {
+  if( file_exists( "thumbs.html" ) ) {
+    $template = implode("", file('thumbs.html'));
+    // you can change here some of the configuration options in the beginning (e.g., the number of thumbnails)
+    //$thumb_row = 5;
+  }
+  else {
+      echo "<b>ERROR:</b> Can't find the thumbs.html file!";
+      exit;
+  }
+}
+
+else { 
 // this only works on php > 4.3, replacing with file()
 //if( file_exists( "template.html" ) ) $template = file_get_contents("template.html");
 if( file_exists( "template.html" ) ) $template = implode("", file('template.html'));
@@ -152,7 +186,7 @@ else {
     echo "<b>ERROR:</b> Can't find the template.html file!";
     exit;
 }
-
+}
 // check that the user did not change the path...
 if (preg_match(':(\.\.|^/|\:):', $path_to_images) || strpos($path_to_images, $thumbnail_dir) !== false) {
 	echo "<strong>ERROR:</strong> Your request contains an invalid path.<br />
@@ -160,19 +194,26 @@ if (preg_match(':(\.\.|^/|\:):', $path_to_images) || strpos($path_to_images, $th
 	exit;
 }
 
-if (empty($path_to_images)) $path_to_images = ".";
+// if our path to images is empty or is set to our home dir of clean url use the base path 
+if ((empty($path_to_images)) || (($clean_urls == "true") && ($path_to_images == $clean_home_directory))) $path_to_images = ".";
+// if our main slideshow directory is not set or we arn't using clean url set this to null
+if ((empty($main_slideshow_directory)) || ($clean_urls != "true")) $main_slideshow_directory = $path;
+
+$link_to_image_path =(($clean_urls == "true") && ($path_to_images == '.')) ? $clean_home_directory : $path_to_images;
 // if there is no $heading_info_file (see format above) set page heading here
 if ( !file_exists("$path_to_images/$heading_info_file")) {
 	$header = "PHPSlideshow by greg lawler at zinkwazi.com";
 	$title = "<a href=\"http://www.zinkwazi.com/\">PHPSlideshow by greg lawler at zinkwazi.com</a>";
-}
+	}
 else {
 	$heading_info = file("$path_to_images/$heading_info_file");
 	$header = "$heading_info[0]";
-	$title = $header;
-}
+	$title = "$heading_info[1]";;
+	}
 $template = str_replace("<SHOW_TITLE>",$title,$template);
 $template = str_replace("<WINDOW_TITLE>",$header,$template);
+
+
 
 // image / text buttons
 if ($show_navigation_buttons == "true") {
@@ -224,9 +265,9 @@ $blank = empty($item[1])?'&nbsp;':$item[1];
 
 if ($currentPic > 0 ) $nav=$back;
 else $nav=$last;
-$nav = "<a href='$path?directory=$path_to_images&currentPic=$nav'>$back_src</a>";
-$current_show = "$path?directory=$path_to_images";
-$next_link = "<a href='$path?directory=$path_to_images&currentPic=$next'>$next_src</a>";
+$nav = ($clean_urls == "true") ? "<a href='$main_slideshow_directory$link_to_image_path/$nav'>$back_src</a>" : "<a href='$path?directory=$link_to_image_path&currentPic=$nav'>$back_src</a>";
+$current_show = ($clean_urls == "true") ? "$main_slideshow_directory$link_to_image_path" : "$path?directory=$link_to_image_path";
+$next_link = ($clean_urls == "true") ? "<a href='$main_slideshow_directory$link_to_image_path/$next'>$next_src</a>" : "<a href='$path?directory=$link_to_image_path&currentPic=$next'>$next_src</a>";
 $template = str_replace("<CURRENT_SHOW>",$current_show,$template);
 $template = str_replace("<BACK>",$nav,$template);
 $template = str_replace("<NEXT>",$next_link,$template);
@@ -255,6 +296,9 @@ $template = str_replace("<IMAGE_TITLE>",$image_title,$template);
 function my_circular($thumbnail_dir, &$template, $a_images, $currentPic, $thumb_row, $path_to_images) {
 global $path;
 global $auto_url;
+global $main_slideshow_directory;
+global $clean_urls;
+global $link_to_image_path;
 
 // get size of $a_images array...
 $number_pics = count($a_images);
@@ -276,25 +320,28 @@ if (($currentPic - $half) < 0) { // near the start...
     for ( $x=($number_pics-abs($underage+1)); $x<$number_pics; $x++) {
         $next=$x;
         $item = preg_split('/;/', rtrim($a_images[$x]), 2);
-        $out .= "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'><img src='$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
+        $out .= ($clean_urls == "true") ?  "\n<a href='$main_slideshow_directory$link_to_image_path/$next$auto_url' class='thumbnail'>": "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'>";
+		$out .= "<img src='$main_slideshow_directory$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
     }
     for ( $x=0; $x<$currentPic  ; $x++ ) {
         $next=$x;
         $item = preg_split('/;/', rtrim($a_images[$x]), 2);
-        $out .= "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'><img src='$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
+        $out .= ($clean_urls == "true") ?  "\n<a href='$main_slideshow_directory$link_to_image_path/$next$auto_url' class='thumbnail'>": "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'>";
+		$out .= "<img src='$main_slideshow_directory$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
     }
 }
 else {
     for ( $x=$currentPic-$half; $x < $currentPic; $x++ ) {
         $next=$x;
         $item = preg_split('/;/', rtrim($a_images[$x]), 2);
-        $out .= "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'><img src='$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
+        $out .= ($clean_urls == "true") ?  "\n<a href='$main_slideshow_directory$link_to_image_path/$next$auto_url' class='thumbnail'>": "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'>";
+		$out .= "<img src='$main_slideshow_directory$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
     }
 }
 
 // show current (center) image thumbnail...
-$item = preg_split('/;/', rtrim($a_images[$currentPic]), 2);
-$out .= "\n<img src='$path_to_images/$thumbnail_dir/".rtrim($item[0])."' class='thumbnail_center'>";
+$item = preg_split('/;/', rtrim($a_images[$currentPic]), 5);
+$out .= "\n<img src=$main_slideshow_directory$path_to_images/$thumbnail_dir/".$item[0]." class='thumbnail_center'>";
 
 // array for right side...
 if (($currentPic + $half) >= $number_pics) { // near the end
@@ -302,19 +349,22 @@ if (($currentPic + $half) >= $number_pics) { // near the end
     for ( $x=$currentPic+1; $x < $number_pics; $x++) {
         $next=$x;
         $item = preg_split('/;/', rtrim($a_images[$x]), 2);
-        $out .= "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'><img src='$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
+        $out .= ($clean_urls == "true") ?  "\n<a href='$main_slideshow_directory$link_to_image_path/$next$auto_url' class='thumbnail'>": "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'>";
+		$out .= "<img src='$main_slideshow_directory$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
     }
     for ( $x=0; $x<=abs($overage); $x++) {
         $next=$x;
         $item = preg_split('/;/', rtrim($a_images[$x]), 2);
-        $out .= "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'><img src='$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
+        $out .= ($clean_urls == "true") ?  "\n<a href='$main_slideshow_directory$link_to_image_path/$next$auto_url' class='thumbnail'>": "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'>";
+		$out .= "<img src='$main_slideshow_directory$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
     }
 }
 else {
     for ( $x=$currentPic+1; $x<=$currentPic+$half; $x++ ) {  // right hand thumbs
         $next=$x;
         $item = preg_split('/;/', rtrim($a_images[$x]), 2);
-        $out .= "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'><img src='$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
+        $out .= ($clean_urls == "true") ?  "\n<a href='$main_slideshow_directory$link_to_image_path/$next$auto_url' class='thumbnail'>": "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$next' class='thumbnail'>";
+		$out .= "<img src='$main_slideshow_directory$path_to_images/$thumbnail_dir/".$item[0]."' class='thumbnail'></a>";
     }
 }
         $template = str_replace("<THUMBNAIL_ROW>",$out,$template);
@@ -325,6 +375,9 @@ else {
 function my_filmstrip($thumbnail_dir, &$template, $a_images, $currentPic, $thumb_row, $path_to_images) {
     global $path;
     global $auto_url;
+	global $main_slideshow_directory;
+	global $clean_urls;
+	global $link_to_image_path;
 
     // get size of $a_images array...
     $number_pics = count($a_images);
@@ -345,33 +398,35 @@ function my_filmstrip($thumbnail_dir, &$template, $a_images, $currentPic, $thumb
     for ($x = $start; $x < ($start + $thumb_row); $x++ ) {
         $item = preg_split('/;/', rtrim($a_images[$x]), 2);
         $class = $x == $currentPic ? 'thumbnail_center' : 'thumbnail';
-        $out .= "\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$x' class='thumbnail'><img src='$path_to_images/$thumbnail_dir/".$item[0]."' class='$class'></a>";
+        $out .=  ($clean_urls == "true") ? "\n<a href='$main_slideshow_directory$link_to_image_path/$x/$auto_url' class='thumbnail'>":"\n<a href='$path?directory=$path_to_images$auto_url&currentPic=$x' class='thumbnail'>";
+		$out .="<img src='$main_slideshow_directory$path_to_images/$thumbnail_dir/".$item[0]."' class='$class'></a>";
     }
-
     $template = str_replace("<THUMBNAIL_ROW>",$out,$template);
 }
 // }}}
 // {{{ meta refresh stuff for auto slideshow...
 // thanks to tim barmann for the bandwidth saving hack to stop auto slideshow at the last image.
-if (($auto == "1") && ($currentPic < $number_pics-1)) {
-        $auto_url = "&auto=1";
-        $meta_refresh = "<meta http-equiv='refresh' content='".$delay;
-        $meta_refresh .= ";url=".$path."?directory=".$path_to_images.$auto_url."&currentPic=".$next."'>";
-        $template = str_replace("<META_REFRESH>",$meta_refresh,$template);
-        $auto_slideshow = "<a href='$path?directory=$path_to_images&currentPic=$currentPic'>$lang_stop_slideshow</a>\n";
+if (($auto == "1") && (($continuous_loop== "true") ||($currentPic < $number_pics-1))) {
+        $auto_url = ($clean_urls == "true") ? "/true" : "&auto=1";
+		$meta_refresh = "<meta http-equiv='refresh' content='".$delay;
+        $meta_refresh .=  ($clean_urls == "true") ? ";url=".$main_slideshow_path.$link_to_image_path."/".$next.$auto_url."'>" : ";url=".$path."?directory=".$path_to_images.$auto_url."&currentPic=".$next."'>";
+	        
+		
+		$template = str_replace("<META_REFRESH>",$meta_refresh,$template);
+        $auto_slideshow = ($clean_urls == "true") ? "<a href='$main_slideshow_path$link_to_image_path/$currentPic'>$lang_stop_slideshow</a>\n" : "<a href='$path?directory=$path_to_images&currentPic=$currentPic'>$lang_stop_slideshow</a>\n";
         $template = str_replace("<AUTO_SLIDESHOW_LINK>",$auto_slideshow,$template);
 }
 else {
         $template = str_replace("<META_REFRESH>","",$template);
-        $auto_slideshow = "<a href='$path?directory=$path_to_images&auto=1&currentPic=$next'>$lang_start_slideshow</a>\n";
+        $auto_slideshow = ($clean_urls == "true") ? "<a href='$main_slideshow_path$link_to_image_path/$next/true'>$lang_start_slideshow</a>\n" : "<a href='$path?directory=$path_to_images&auto=1&currentPic=$next'>$lang_start_slideshow</a>\n";
         $template = str_replace("<AUTO_SLIDESHOW_LINK>",$auto_slideshow,$template);
 }
 // }}}
 
-$images = "<a href='$path?directory=$path_to_images$auto_url&currentPic=$next'>";
-$images .= "<img src='$path_to_images/$item[0]' class='image' alt='$lang_img_alt' title='$lang_img_hover'></a>";
+$images = ($clean_urls == "true") ? "<a href='$main_slideshow_directory$link_to_image_path/$next$auto_url'>" : "<a href='$path?directory=$path_to_images$auto_url&currentPic=$next'>";
+$images .= "<img src='$main_slideshow_directory$path_to_images/$item[0]' class='image' alt='$lang_img_alt' title='$lang_img_hover'></a>";
 $template = str_replace("<IMAGE>",$images,$template);
-$next_image = "$path_to_images/$next_item[0]";
+$next_image = "$link_to_image_path/$next_item[0]";
 $template = str_replace("<NEXT_IMAGE>",$next_image,$template); // useful for prefetching
 
 if( file_exists( "$path_to_images/$thumbnail_dir" ) ) {
@@ -486,3 +541,4 @@ function chmod_ftp_directory($full_ftp_path, $thumbnail_dir, $path_to_images, $f
 // }}}
 echo $template;
 ?>
+

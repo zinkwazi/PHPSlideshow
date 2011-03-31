@@ -1,0 +1,15 @@
+RewriteEngine On
+RewriteBase /
+RewriteCond %{HTTP_HOST} ^.*$
+#main slideshow dir
+RewriteRule ^/?$ /slideshow/phpslideshow.php [L,NC]
+#browse main thumbnail template
+RewriteRule ^browse/?$ /slideshow/phpslideshow.php?browse=1 [L,NC]
+#browse dir thumbnail template
+RewriteRule ^([a-z0-9_-]+)/?browse/?$ /slideshow/phpslideshow.php?directory=$1&browse=1 [L,NC]
+#slideshow directory
+RewriteRule ^([a-z0-9_-]+)/?$ /slideshow/phpslideshow.php?directory=$1 [L,NC]
+#slideshow directory/image_number
+RewriteRule ^([a-z0-9_-]+)/([0-9]+)/?$ /slideshow/phpslideshow.php?directory=$1&currentPic=$2 [L,NC]
+#auto true
+RewriteRule ^([a-z0-9_-]+)/([0-9]+)/true/?$ /slideshow/phpslideshow.php?directory=$1&currentPic=$2&auto=1 [L,NC]

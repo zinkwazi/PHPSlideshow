@@ -55,7 +55,19 @@ A: There is a template.html which is the file you edit to change the layout, col
     There are a number of "tags" that you can use in the template.html file to customize your PHPslideshow.
     See the list at the end of the README.txt
 
-Q: How do I change the number of thumbnails displayed.
+Q: How do I use clean urls?
+A: Upload the .htaccess file to your server make sure the path is correct by defualt we assume you are uploading to the "slideshow" folder on your server. 
+   Next update your settings under clean urls
+    $clean_urls = true;
+
+Q: How can I display all thumbails on a single page?
+A: Upload the browse.html template and then visit phpslideshow?browse=1. NOTE: This requires thumbnails to be generated
+
+Q: Can I make the slideshow loop?
+A: Sure just enable continuous_loop in your settings:
+    $continuous_loop = true;
+    
+Q: How do I change the number of thumbnails displayed?
 A: Edit the $thumb_row variable in the phpslideshow.php file.
     e.g. If you wanted 30 thumbnails, you would set $thumb_row as follows:
     $thumb_row = 30;
@@ -94,12 +106,15 @@ A: There are two ways to do this,
      dir /b *.jpg > pics.txt at a dos prompt in windows
      You will need edit this in a text editor to add the semi colon and
      desription.
-
-Q: How do I use my current template HTML file with PHPSlideshow?
-A: Copy your template HTML into a file called template.html and add any of the available PHPSlideshow tags.
+    
+Q: Can I have a page header and a gallery title?
+A: Just like pics.txt you can use a header.txt file. The first line is the Title (what shows up in the Title Bar) and 
+   The 
+    $continuous_loop = true;
 
 Following is the list of availabls tags:
-   <SHOW_TITLE> : the slideshow title from the heading.txt file.
+   <WINDOW_TITLE> : the title of the window from your heading.txt file (first line)
+   <SHOW_TITLE> : A discription or longer title from your heading.txt file (second line).
    <CURRENT_SHOW> : displays path to the current slideshow.
    <BACK> : navigation button to go back one image.
    <NEXT> : navigation button to go forward one image.
